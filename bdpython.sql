@@ -4,7 +4,7 @@ use bdpython
 CREATE TABLE Usuario (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombreUsuario VARCHAR(50) NOT NULL UNIQUE,
-    contrasena VARCHAR(40) NOT NULL,
+    contrasena VARCHAR(250) NOT NULL,
     rol varchar(20)
 );
 
@@ -66,4 +66,8 @@ CREATE TABLE RegistroHoras (
     FOREIGN KEY (idProyecto) REFERENCES Proyectos(id)
 );
 
-
+select * from usuario 
+select * from empleados
+select * from gerente
+select * from administrador
+SELECT nombreUsuario, contrasena, rol FROM Usuario 
