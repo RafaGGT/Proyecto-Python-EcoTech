@@ -79,13 +79,8 @@ class Usuario:
             print("Usuario no encontrado.")
             return False
 
-    # --- Modelo: Usuario ---
     def modificarUsuario(self, conexion, nuevo_nombreUsuario=None, nueva_contrasena=None, nuevo_rol=None):
-        if self.id is None:
-            return False  
-
         cursor = conexion.conexion.cursor()
-
         if nuevo_nombreUsuario:
             self.nombreDeUsuario = nuevo_nombreUsuario
         if nueva_contrasena:

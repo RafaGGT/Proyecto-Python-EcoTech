@@ -113,3 +113,20 @@ class Empleado(us.Usuario):
         conexion.conexion.commit()
         cursor.close()
         return True
+
+    @staticmethod
+    def listarEmpleados(conexion):
+        cursor = conexion.conexion.cursor()
+        consulta = """
+            SELECT e.id, e.nombre
+            FROM Empleados e
+            JOIN Usuario u ON e.id = u.id
+            WHERE u.rol = 'Empleado'
+            ORDER BY e.id
+        """
+        cursor.execute(consulta)
+        empleados = cursor.fetchall()
+        cursor.close()
+        return empleados
+
+        

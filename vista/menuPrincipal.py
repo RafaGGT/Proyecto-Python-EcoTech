@@ -21,10 +21,51 @@ class Menu:
         os.system("cls")
         print("=== Menú Principal ===")
         print("1. Iniciar Sesión")
-        print("2. Registrar Usuario")
-        print("3. Modificar Usuario")
         print("0. Salir")
         self.obtenerOpcion()
+
+    def menuInicio(self):
+        os.system("cls")
+        usuario_actual = self.usuario_actual
+        conexion = self.conexion
+        # Diccionario de roles y sus facultades
+        poderes = {
+                "Empleado": [
+                    ("Modificar usuario", self.modificarUsuario),
+                    ("Registro de tiempo", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Listar empleados", self.listarEmpleados),
+                    ("Salir", self.salir)
+                ],
+                "Gerente": [
+                    ("Modificar usuario", self.modificarUsuario), 
+                    ("Registro de tiempo", lambda: print("Funcionalidad en desarrollo...")),                 
+                    ("Agregar Proyecto", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Agregar Empleado a Proyecto", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Desasignar Empleado de Proyecto", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Asignar Empleado a departamento", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Desasignar Empleado de departamento", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Salir", self.salir)
+                ],
+                "Administrador": [
+                    ("Contratar empleado", self.registrarUsuario),
+                    ("Modificar usuario", self.modificarUsuario),
+                    ("Agregar Departamento", lambda: print("Funcionalidad en desarrollo...")),  
+                    ("Eliminar Departamento", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Registro de tiempo", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Generar Informe", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Salir", self.salir)
+                ]
+            }
+        # Menu personalizado según el rol
+        print(f"=== Bienvenido {usuario_actual.nombre} ===")
+        if usuario_actual.rol in poderes:
+            opciones = poderes[usuario_actual.rol]
+            for i, (nombre, _) in enumerate(opciones, start=1):
+                print(f"{i}) {nombre}")
+            opcion = input("Seleccione una opción: ")
+            opcion = int(opcion.strip())
+            eleccion = poderes[usuario_actual.rol][opcion - 1][1]
+            eleccion()
 
     def salir(self):
         print("Adios! 👋🏻")
@@ -34,13 +75,6 @@ class Menu:
         opcion = input("Seleccione una opción: ")
         if opcion == '1':
             self.iniciarSesion()
-            self.mostrarMenu()
-        elif opcion == '2':
-            self.registrarUsuario()
-            self.mostrarMenu()
-        elif opcion == '3':
-            self.modificarUsuario()
-            self.mostrarMenu()
         elif opcion == '0':
             self.salir()
         else:
@@ -104,12 +138,15 @@ class Menu:
                 self.usuario_actual = autenticar
                 print("Inicio de sesión exitoso.")
                 input("Presione Enter para continuar...")
+                self.menuInicio()
             else:
                 print("Nombre de usuario o contraseña incorrectos.")
                 input("Presione Enter para continuar...")
+                self.mostrarMenu()
         except Exception as e:
             print(f"Error al iniciar sesión: {e}")
             input("Presione Enter para continuar...")
+            self.mostrarMenu()
             
     def modificarUsuario(self):
         if not hasattr(self, "usuario_actual"):
@@ -182,3 +219,15 @@ class Menu:
             except Exception as e:
                 print(f"Error al modificar usuario: {e}")
             input("Presione Enter para continuar...")
+            self.mostrarMenu()
+
+    def listarEmpleados(self):
+        os.system("cls")
+        try:
+            empleados = Empleado.listarEmpleados(self.conexion)
+            print("=== Lista de Empleados ===")
+            for emp in empleados:
+                print(f"ID: {emp[0]}, Nombre: {emp[1]}")
+        except Exception as e:
+            print(f"Error al listar empleados: {e}")
+        input("Presione Enter para continuar...")

@@ -12,3 +12,11 @@ class Administrador(Empleado):
         cursor.execute(consulta, valores)
         conexion.conexion.commit()
         cursor.close()
+
+    def agregarDepartamento(self, conexion, nombreDepartamento):
+        cursor = conexion.conexion.cursor()
+        consulta = "INSERT INTO Departamento (nombre) VALUES (%s)"
+        valores = (nombreDepartamento,)
+        cursor.execute(consulta, valores)
+        conexion.conexion.commit()
+        cursor.close()

@@ -1,4 +1,4 @@
-from vista.menu import Menu
+from vista.menuPrincipal import Menu
 
 menuPrincipal = Menu()
 menuPrincipal.mostrarMenu()
