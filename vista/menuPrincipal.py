@@ -2,7 +2,8 @@ from modelo.bd import Conexion
 from modelo.gerente import Gerente
 from modelo.administrador import Administrador
 from modelo.empleado import Empleado
-from modelo.usuario import Usuario
+from modelo.reportehoras import RegistroHoras
+from modelo.proyecto import Proyecto
 import os
 from datetime import date
 import pwinput 
@@ -19,57 +20,10 @@ class Menu:
 
     def mostrarMenu(self):
         os.system("cls")
-        print("=== Menú Principal ===")
+        print("=== EcoTech Solutions ===")
         print("1. Iniciar Sesión")
         print("0. Salir")
         self.obtenerOpcion()
-
-    def menuInicio(self):
-        os.system("cls")
-        usuario_actual = self.usuario_actual
-        conexion = self.conexion
-        # Diccionario de roles y sus facultades
-        poderes = {
-                "Empleado": [
-                    ("Modificar usuario", self.modificarUsuario),
-                    ("Registro de tiempo", lambda: print("Funcionalidad en desarrollo...")),
-                    ("Listar empleados", self.listarEmpleados),
-                    ("Salir", self.salir)
-                ],
-                "Gerente": [
-                    ("Modificar usuario", self.modificarUsuario), 
-                    ("Registro de tiempo", lambda: print("Funcionalidad en desarrollo...")),                 
-                    ("Agregar Proyecto", lambda: print("Funcionalidad en desarrollo...")),
-                    ("Agregar Empleado a Proyecto", lambda: print("Funcionalidad en desarrollo...")),
-                    ("Desasignar Empleado de Proyecto", lambda: print("Funcionalidad en desarrollo...")),
-                    ("Asignar Empleado a departamento", lambda: print("Funcionalidad en desarrollo...")),
-                    ("Desasignar Empleado de departamento", lambda: print("Funcionalidad en desarrollo...")),
-                    ("Salir", self.salir)
-                ],
-                "Administrador": [
-                    ("Contratar empleado", self.registrarUsuario),
-                    ("Modificar usuario", self.modificarUsuario),
-                    ("Agregar Departamento", lambda: print("Funcionalidad en desarrollo...")),  
-                    ("Eliminar Departamento", lambda: print("Funcionalidad en desarrollo...")),
-                    ("Registro de tiempo", lambda: print("Funcionalidad en desarrollo...")),
-                    ("Generar Informe", lambda: print("Funcionalidad en desarrollo...")),
-                    ("Salir", self.salir)
-                ]
-            }
-        # Menu personalizado según el rol
-        print(f"=== Bienvenido {usuario_actual.nombre} ===")
-        if usuario_actual.rol in poderes:
-            opciones = poderes[usuario_actual.rol]
-            for i, (nombre, _) in enumerate(opciones, start=1):
-                print(f"{i}) {nombre}")
-            opcion = input("Seleccione una opción: ")
-            opcion = int(opcion.strip())
-            eleccion = poderes[usuario_actual.rol][opcion - 1][1]
-            eleccion()
-
-    def salir(self):
-        print("Adios! 👋🏻")
-        self.conexion.cerrar()
 
     def obtenerOpcion(self):
         opcion = input("Seleccione una opción: ")
@@ -82,6 +36,90 @@ class Menu:
             input("Presione Enter para continuar...")
             self.mostrarMenu()
 
+    def iniciarSesion(self):
+        os.system("cls")
+        print("=== Iniciar Sesión ===")
+        nombreDeUsuario = input("Nombre de usuario: ")
+        nombreDeUsuario = nombreDeUsuario.strip()
+        contrasena = pwinput.pwinput("Ingrese la contraseña: ", mask = "*")
+        contrasena = contrasena.strip()
+        # Verificar credenciales al instanciar el objeto Empleado con el nombre de usuario y la contraseña
+        autenticar = Empleado(nombreDeUsuario, contrasena) 
+        try:
+            if autenticar.iniciarSesion(self.conexion):
+                # Guardar el usuario autenticado para uso posterior
+                self.usuario_actual = autenticar
+                print("Inicio de sesión exitoso.")
+                input("Presione Enter para continuar...")
+                self.menuInicio()
+            else:
+                print("Nombre de usuario o contraseña incorrectos.")
+                input("Presione Enter para continuar...")
+                self.mostrarMenu()
+        except Exception as e:
+            print(f"Error al iniciar sesión: {e}")
+            input("Presione Enter para continuar...")
+            self.mostrarMenu()
+
+    def menuInicio(self):
+        os.system("cls")
+        # Hacemos uso del atributo guardado del usuario autenticado
+        usuario_actual = self.usuario_actual
+        conexion = self.conexion
+        # Diccionario de roles y sus facultades
+        poderes = {
+                "Empleado": [
+                    ("Modificar usuario", self.modificarUsuario),
+                    ("Registro de tiempo", self.generarReporte),
+                    ("Listar Registros", self.listarReportes),
+                    ("Eliminar registro de tiempo", self.eliminarReporte),
+                    ("Listar empleados", self.listarEmpleados),
+                    ("Salir", self.salir)
+                ],
+                "Gerente": [
+                    ("Modificar usuario", self.modificarUsuario), 
+                    ("Registro de tiempo", self.listarReportes),                 
+                    ("Agregar Proyecto", self.crearProyecto),
+                    ("Listar Proyecto", self.listarProyecto)
+                    ("Agregar Empleado a Proyecto", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Desasignar Empleado de Proyecto", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Asignar Empleado a departamento", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Desasignar Empleado de departamento", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Salir", self.salir)
+                ],
+                "Administrador": [
+                    ("Contratar empleado", self.registrarUsuario),
+                    ("Modificar usuario", self.modificarUsuario),
+                    ("Registro de tiempo", self.listarReportes),
+                    ("Agregar Departamento", lambda: print("Funcionalidad en desarrollo...")),  
+                    ("Eliminar Departamento", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Registro de tiempo", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Generar Informe", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Despedir Empleado", self.despedirEmpleados),
+                    ("Salir", self.salir)
+                ]
+            }
+        # Menu personalizado según el rol
+        print(f"=== Bienvenido {usuario_actual.nombre} ===")
+        if usuario_actual.rol in poderes:
+            opciones = poderes[usuario_actual.rol]
+            # Mostrar opciones disponibles según el rol
+            for i, (nombre, _) in enumerate(opciones, start=1):
+                print(f"{i}) {nombre}")
+            opcion = input("Seleccione una opción: ")
+            opcion = int(opcion.strip())
+            eleccion = poderes[usuario_actual.rol][opcion - 1][1]()
+        else: 
+            self.despedido()
+
+    def salir(self):
+        print("Adios! 👋🏻")
+        self.conexion.cerrar()
+
+    def despedido(self):
+        print("Haz sido removido de la empresa")
+
+# ******************************************** Zona CRUD Usuarios ********************************************
 
     def registrarUsuario(self):
         os.system("cls")
@@ -95,8 +133,7 @@ class Menu:
         fechaInicio = date.today().strftime("%Y-%m-%d")
         salario = input("Salario: ")
         salario = int(salario.strip())
-        print("Seleccione un rol \n1) Empleado\n2) Gerente\n3) Administrador")
-        rolInput = input("Seleccione un rol: ") 
+        rolInput = input("Seleccione un rol \n1) Empleado\n2) Gerente\n3) Administrador \nSeleccione un rol: ") 
     # Diccionario que mapea la opción a (nombre del rol, clase correspondiente)
         roles_clases = {
             '1': ("Empleado", Empleado),
@@ -104,6 +141,7 @@ class Menu:
             '3': ("Administrador", Administrador)
         }
         if rolInput in roles_clases:
+            # Establecemos el rol y la clase con la tupla
             rol, Clase = roles_clases[rolInput]
             nuevoEmpleado = Clase(
                 nombreDeUsuario=nombreDeUsuario,
@@ -123,40 +161,12 @@ class Menu:
         else:
             print("Rol inválido. Intente de nuevo.")
         input("Presione Enter para continuar...")
-
-    def iniciarSesion(self):
-        os.system("cls")
-        print("=== Iniciar Sesión ===")
-        nombreDeUsuario = input("Nombre de usuario: ")
-        nombreDeUsuario = nombreDeUsuario.strip()
-        contrasena = pwinput.pwinput("Ingrese la contraseña: ", mask = "*")
-        contrasena = contrasena.strip()
-        # Aquí se debería validar el usuario con la base de datos
-        autenticar = Empleado(nombreDeUsuario, contrasena) 
-        try:
-            if autenticar.iniciarSesion(self.conexion):
-                self.usuario_actual = autenticar
-                print("Inicio de sesión exitoso.")
-                input("Presione Enter para continuar...")
-                self.menuInicio()
-            else:
-                print("Nombre de usuario o contraseña incorrectos.")
-                input("Presione Enter para continuar...")
-                self.mostrarMenu()
-        except Exception as e:
-            print(f"Error al iniciar sesión: {e}")
-            input("Presione Enter para continuar...")
-            self.mostrarMenu()
+        self.menuInicio()
             
     def modificarUsuario(self):
-        if not hasattr(self, "usuario_actual"):
-            print("Debes iniciar sesión primero.")
-            input("Presione Enter para continuar...")
-            return
-
+        # Hacemos uso del atributo guardado del usuario autenticado y la conexión
         usuario_actual = self.usuario_actual
         conexion = self.conexion
-
         while True:
             os.system("cls")
             print("=== Modificar Usuario ===")
@@ -171,7 +181,6 @@ class Menu:
             print("0) Salir")
 
             opcion = input("Seleccione el campo a modificar: ")
-            # y si creamos un diccionario que mapee la opción al atributo y tipo de dato
             if opcion == '1':
                 nuevo_valor = input("Nuevo nombre de usuario: ").strip()
                 usuario_actual.nombreDeUsuario = nuevo_valor
@@ -231,3 +240,98 @@ class Menu:
         except Exception as e:
             print(f"Error al listar empleados: {e}")
         input("Presione Enter para continuar...")
+        self.menuInicio()
+
+    def despedirEmpleados(self):
+        os.system("cls")
+# ******************************************** Zona CRUD Departamentos ********************************************
+# ******************************************** Zona CRUD Proyectos ********************************************
+    def crearProyecto(self):
+        os.system("cls")
+        nombre = print("Nombre del proyecto: ")
+        nombre = nombre.strip().title()
+        descripcion = print("Descripcion del proyecto: ")
+        descripcion = descripcion.strip()
+        fecha = input("Nueva fecha de inicio (YYYY-MM-DD): ")
+        fecha = fecha.strip()
+        nuevoProyecto = Proyecto(
+            nombre = nombre,
+            descripcion = descripcion,
+            fecha = fecha
+        )
+        nuevoProyecto.crearProyecto(self.conexion)
+        print("Proyecto registrado exitosamente.")
+        self.menuInicio()
+
+    def listarProyecto(self):
+        os.system("cls")
+        print("=== Lista de Proyectos ===\n")
+        proyectos = Proyecto.listarProyectos(self.conexion)
+        if not proyectos:
+            print("No hay proyectos registrados.\n")
+        else:
+            for proyecto in proyectos:
+                print(f"ID: {proyecto.id} \nNombre: {proyecto.nombre} \nFecha Inicio: {proyecto.fechaInicio} \nDescripción: {proyecto.descripcion}\n")
+        input("\nPresione Enter para continuar...")
+        self.menuInicio
+
+    
+
+# ******************************************** Zona CRUD Reportes ********************************************
+    def listarReportes(self):
+        os.system("cls")
+        try:
+            reportes = RegistroHoras.obtener_reportes(self.conexion, self.usuario_actual.id)
+            print("=== Lista de Reportes de Horas ===")
+            if not reportes:
+                print("No hay reportes registrados para este empleado.")
+            else:
+                for rep in reportes:
+                    print(f"\nID: {rep[0]}\nHoras Trabajadas: {rep[1]}\nFecha: {rep[2]}\nDescripción: {rep[3]}\nID Proyecto: {rep[5]} \n")
+        except Exception as e:
+            print(f"Error al listar reportes: {e}")
+        
+
+    def generarReporte(self):
+        os.system("cls")
+        print("=== Registrar Reporte de Horas ===")
+        try:
+            horas = int(input("Ingrese cantidad de horas trabajadas: "))
+            fecha = input("Ingrese fecha (YYYY-MM-DD): ")
+            descripcion = input("Ingrese descripción de tareas realizadas: ")
+            self.listarReportes()
+            id_proyecto = input("Ingrese el id del proyecto")
+            nuevo_reporte = RegistroHoras(
+                horas_trabajadas=horas,
+                fecha=fecha,
+                descripcion_tareas=descripcion,
+                id_empleado=self.usuario_actual.id,
+                id_proyecto=id_proyecto
+            )
+            nuevo_reporte.registrar_horas(self.conexion)
+            print("\n✅ Reporte registrado correctamente.")
+        except Exception as e:
+            print(f"Error al registrar reporte: {e}")
+        input("Presione Enter para continuar...")
+        self.menuInicio()
+
+    def eliminarReporte(self):
+        self.listarReportes()
+        try:
+            id_reporte = int(input("Ingrese el ID del reporte a eliminar: "))
+            confirmar = input("¿Está seguro que desea eliminarlo? (s/n): ").lower()
+            if confirmar == "s":
+                RegistroHoras.eliminar_reporte(self.conexion, id_reporte)
+                print("✅ Reporte eliminado correctamente.")
+            else:
+                print("Operación cancelada.")
+        except Exception as e:
+            print(f"Error al eliminar reporte: {e}")
+
+    def modificarReporte(self):
+        self.listarReportes()
+        try:
+            
+            id_reporte = int(input("Ingrese el ID del reporte, ingrese 0 para salir: "))
+        except:
+            pass

@@ -1,4 +1,3 @@
-from modelo import bd
 import bcrypt
 
 class Usuario:

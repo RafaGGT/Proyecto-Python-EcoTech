@@ -71,3 +71,9 @@ select * from empleados
 select * from gerente
 select * from administrador
 SELECT nombreUsuario, contrasena, rol FROM Usuario 
+select * from proyectos
+
+INSERT INTO Proyectos (nombre, descripcion, fechaInicio)
+VALUES ('Proyecto Alpha', 'Desarrollo de sistema interno', '2025-10-01');
+
+select * from registrohoras
