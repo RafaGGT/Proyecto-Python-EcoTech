@@ -39,14 +39,17 @@ class RegistroHoras:
         conexion.conexion.commit()
         cursor.close()
 
-    def modificar_reporte(self, idReporte, horas, fecha, descripcion):
-        cursor = self.conexion.cursor()
-        cursor.execute("""
-            UPDATE RegistroHoras
-            SET horasTrabajadas = %s,
-                fecha = %s,
-                descripcionTareas = %s
-            WHERE id = %s
-        """, (horas, fecha, descripcion, idReporte))
-        self.conexion.commit()
+    def modificarReporte(self, conexion):
+        cursor = conexion.conexion.cursor()
+        consulta = """
+        UPDATE RegistroHoras
+        SET horasTrabajadas = %s,
+            fecha = %s,
+            descripcionTareas = %s
+        WHERE id = %s
+        """
+        valores = (self.horasTrabajadas, self.fecha, self.descripcionTareas, self.id)
+        cursor.execute(consulta, valores)
+        conexion.conexion.commit()
         cursor.close()
+        return True

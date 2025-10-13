@@ -56,3 +56,24 @@ class Proyecto:
         resultado = cursor.fetchall()
         cursor.close()
         
+    def modificarProyecto(self, conexion):
+        cursor = conexion.conexion.cursor()
+        consulta = """
+        UPDATE Proyectos
+        SET nombre = %s, descripcion = %s, fechaInicio = %s
+        WHERE id = %s
+        """
+        valores = (self.nombre, self.descripcion, self.fechaInicio, self.id)
+        cursor.execute(consulta, valores)
+        conexion.conexion.commit()
+        cursor.close()
+        return True
+    
+    @staticmethod
+    def eliminarProyecto(conexion, id_proyecto):
+        cursor = conexion.conexion.cursor()
+        consulta = "DELETE FROM Proyectos WHERE id = %s"
+        cursor.execute(consulta, (id_proyecto,))
+        conexion.conexion.commit()
+        cursor.close()
+        return True

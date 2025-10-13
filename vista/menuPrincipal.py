@@ -72,15 +72,21 @@ class Menu:
                     ("Modificar usuario", self.modificarUsuario),
                     ("Registro de tiempo", self.generarReporte),
                     ("Listar Registros", self.listarReportes),
+                    ("Modificar Registro", self.modificarReporte),           
                     ("Eliminar registro de tiempo", self.eliminarReporte),
                     ("Listar empleados", self.listarEmpleados),
                     ("Salir", self.salir)
                 ],
                 "Gerente": [
                     ("Modificar usuario", self.modificarUsuario), 
-                    ("Registro de tiempo", self.listarReportes),                 
+                    ("Registro de tiempo", self.generarReporte),
+                    ("Listar Registros", self.listarReportes),
+                    ("Modificar Registro", self.modificarReporte),           
+                    ("Eliminar registro de tiempo", self.eliminarReporte),              
                     ("Agregar Proyecto", self.crearProyecto),
-                    ("Listar Proyecto", self.listarProyecto)
+                    ("Listar Proyecto", self.listarProyecto),
+                    ("Modificar proyecto", self.modificarProyecto),
+                    ("Eliminar proyecto", self.eliminarProyecto),
                     ("Agregar Empleado a Proyecto", lambda: print("Funcionalidad en desarrollo...")),
                     ("Desasignar Empleado de Proyecto", lambda: print("Funcionalidad en desarrollo...")),
                     ("Asignar Empleado a departamento", lambda: print("Funcionalidad en desarrollo...")),
@@ -89,11 +95,13 @@ class Menu:
                 ],
                 "Administrador": [
                     ("Contratar empleado", self.registrarUsuario),
+                    ("Registro de tiempo", self.generarReporte),
+                    ("Listar Registros", self.listarReportes),
+                    ("Modificar Registro", self.modificarReporte),           
+                    ("Eliminar registro de tiempo", self.eliminarReporte),
                     ("Modificar usuario", self.modificarUsuario),
-                    ("Registro de tiempo", self.listarReportes),
                     ("Agregar Departamento", lambda: print("Funcionalidad en desarrollo...")),  
-                    ("Eliminar Departamento", lambda: print("Funcionalidad en desarrollo...")),
-                    ("Registro de tiempo", lambda: print("Funcionalidad en desarrollo...")),
+                    ("Eliminar Departamento", lambda: print("Funcionalidad en desarrollo...")),                    
                     ("Generar Informe", lambda: print("Funcionalidad en desarrollo...")),
                     ("Despedir Empleado", self.despedirEmpleados),
                     ("Salir", self.salir)
@@ -275,7 +283,79 @@ class Menu:
         input("\nPresione Enter para continuar...")
         self.menuInicio
 
-    
+    def modificarProyecto(self):
+        os.system("cls")
+        print("=== Modificar Proyecto ===\n")
+        proyectos = Proyecto.listarProyectos(self.conexion)
+        if not proyectos:
+            print("No hay proyectos registrados.\n")
+            input("Presione Enter para continuar...")
+            self.menuInicio()
+            return
+
+        for p in proyectos:
+            print(f"ID: {p[0]} | Nombre: {p[1]} | Fecha Inicio: {p[3]}")
+
+        try:
+            id_proyecto = int(input("\nIngrese el ID del proyecto que desea modificar: "))
+        except ValueError:
+            print("⚠️ ID inválido.")
+            input("Presione Enter para continuar...")
+            return self.menuInicio()
+
+        nombre = input("Nuevo nombre (deje vacío para mantener): ").strip().title()
+        descripcion = input("Nueva descripción (deje vacío para mantener): ").strip()
+        fecha = input("Nueva fecha de inicio (YYYY-MM-DD, deje vacío para mantener): ").strip()   
+
+        # Buscar el proyecto actual
+        proyecto_actual = next((p for p in proyectos if p[0] == id_proyecto), None)
+        if not proyecto_actual:
+            print("⚠️ Proyecto no encontrado.")
+            input("Presione Enter para continuar...")
+            return self.menuInicio()
+
+        nuevoProyecto = Proyecto(
+            id=id_proyecto,
+            nombre=nombre or proyecto_actual[1],
+            descripcion=descripcion or proyecto_actual[2],
+            fechaInicio=fecha or proyecto_actual[3]
+        )
+
+        nuevoProyecto.modificarProyecto(self.conexion)
+        print("\n✅ Proyecto modificado exitosamente.")
+        input("\nPresione Enter para continuar...")
+        self.menuInicio()
+
+    def eliminarProyecto(self):
+        os.system("cls")
+        print("=== Eliminar Proyecto ===\n")
+        proyectos = Proyecto.listarProyectos(self.conexion)
+        if not proyectos:
+            print("No hay proyectos registrados.\n")
+            input("Presione Enter para continuar...")
+            self.menuInicio()
+            return
+
+        for p in proyectos:
+            print(f"ID: {p[0]} | Nombre: {p[1]} | Fecha Inicio: {p[3]}")
+
+        try:
+            id_proyecto = int(input("\nIngrese el ID del proyecto que desea eliminar: "))
+        except ValueError:
+            print("⚠️ ID inválido.")
+            input("Presione Enter para continuar...")
+            return self.menuInicio()
+
+        confirm = input("¿Está seguro que desea eliminar este proyecto? (s/n): ").strip().lower()
+        if confirm == "s":
+            Proyecto.eliminarProyecto(self.conexion, id_proyecto)
+            print("\n✅ Proyecto eliminado exitosamente.")
+        else:
+            print("\nOperación cancelada.")
+
+        input("\nPresione Enter para continuar...")
+        self.menuInicio()
+   
 
 # ******************************************** Zona CRUD Reportes ********************************************
     def listarReportes(self):
@@ -329,9 +409,48 @@ class Menu:
             print(f"Error al eliminar reporte: {e}")
 
     def modificarReporte(self):
-        self.listarReportes()
+        os.system("cls")
+        print("=== Modificar Reporte de Horas ===\n")
+        reportes = RegistroHoras.listarReportes(self.conexion, self.usuario_actual.id)
+
+        if not reportes:
+            print("No hay reportes registrados.\n")
+            input("Presione Enter para continuar...")
+            self.menuInicio()
+            return
+
+        for r in reportes:
+            print(f"ID: {r[0]} | Fecha: {r[2]} | Horas: {r[1]} | Proyecto ID: {r[4]}")
+
         try:
-            
-            id_reporte = int(input("Ingrese el ID del reporte, ingrese 0 para salir: "))
-        except:
-            pass
+            id_reporte = int(input("\nIngrese el ID del reporte que desea modificar: "))
+        except ValueError:
+            print("⚠️ ID inválido.")
+            input("Presione Enter para continuar...")
+            return self.menuInicio()
+
+        # Buscar reporte actual
+        reporte_actual = next((r for r in reportes if r[0] == id_reporte), None)
+        if not reporte_actual:
+            print("⚠️ Reporte no encontrado.")
+            input("Presione Enter para continuar...")
+            return self.menuInicio()
+
+        # Nuevos datos
+        horas = input(f"Nuevas horas trabajadas (actual: {reporte_actual[1]}): ").strip()
+        fecha = input(f"Nueva fecha (actual: {reporte_actual[2]}) (YYYY-MM-DD): ").strip()
+        descripcion = input(f"Nueva descripción (actual: {reporte_actual[3]}): ").strip()
+
+        nuevo_reporte = RegistroHoras(
+            id=id_reporte,
+            horasTrabajadas=int(horas) if horas else reporte_actual[1],
+            fecha=fecha if fecha else reporte_actual[2],
+            descripcionTareas=descripcion if descripcion else reporte_actual[3],
+            idEmpleado=self.usuario_actual.id,
+            idProyecto=reporte_actual[4]
+        )
+
+        nuevo_reporte.modificarReporte(self.conexion)
+        print("\n✅ Reporte modificado exitosamente.")
+        input("\nPresione Enter para continuar...")
+        self.menuInicio()
